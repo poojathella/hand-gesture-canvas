@@ -1,7 +1,10 @@
+import streamlit as st
 import cv2
 import mediapipe as mp
 import numpy as np
 import math
+
+st.title("Hand Gesture Canvas ✨")
 
 # -------------------------------
 # Camera Setup
@@ -10,17 +13,14 @@ cap = cv2.VideoCapture(0)
 cap.set(3,1280)
 cap.set(4,720)
 
-cv2.namedWindow("Hand Gesture Canvas",cv2.WND_PROP_FULLSCREEN)
-cv2.setWindowProperty("Hand Gesture Canvas",
-                      cv2.WND_PROP_FULLSCREEN,
-                      cv2.WINDOW_FULLSCREEN)
-
 # -------------------------------
 # MediaPipe Setup
 # -------------------------------
 mp_hands = mp.solutions.hands
-hands_detector = mp_hands.Hands(min_detection_confidence=0.75,
-                                min_tracking_confidence=0.75)
+hands_detector = mp_hands.Hands(
+    min_detection_confidence=0.75,
+    min_tracking_confidence=0.75
+)
 
 mp_draw = mp.solutions.drawing_utils
 
@@ -127,7 +127,7 @@ def draw_palette(img):
     return pen_start, pen_end, neon_start, neon_end
 
 # -------------------------------
-# Neon Glow (THINNER FIX)
+# Neon Glow
 # -------------------------------
 def neon(canvas_img,x1,y1,x2,y2,color,size):
 
@@ -141,8 +141,10 @@ def neon(canvas_img,x1,y1,x2,y2,color,size):
     cv2.line(canvas_img,(x1,y1),(x2,y2),(255,255,255),core_size,cv2.LINE_AA)
 
 # -------------------------------
-# Main Loop
+# Streamlit Frame
 # -------------------------------
+FRAME_WINDOW = st.image([])
+
 while True:
 
     success,img = cap.read()
@@ -163,9 +165,7 @@ while True:
         hand_landmarks = result.multi_hand_landmarks[0]
 
         mp_draw.draw_landmarks(
-            img,hand_landmarks,mp_hands.HAND_CONNECTIONS,
-            mp_draw.DrawingSpec(color=(255,255,255),thickness=1,circle_radius=2),
-            mp_draw.DrawingSpec(color=(255,255,255),thickness=1)
+            img,hand_landmarks,mp_hands.HAND_CONNECTIONS
         )
 
         h,w,_ = img.shape
@@ -273,10 +273,6 @@ while True:
     img=cv2.bitwise_and(img,imgInv)
     img=cv2.bitwise_or(img,canvas)
 
-    cv2.imshow("Hand Gesture Canvas",img)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    if cv2.waitKey(1) & 0xFF==ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
+    FRAME_WINDOW.image(img)
