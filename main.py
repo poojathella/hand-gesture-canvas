@@ -1,10 +1,15 @@
-import streamlit as st
 import cv2
 import mediapipe as mp
 import numpy as np
 import math
+import streamlit as st
 
-st.title("Hand Gesture Canvas ✨")
+# -------------------------------
+# Streamlit UI
+# -------------------------------
+st.title("Hand Gesture Canvas")
+run = st.checkbox("Start Camera")
+frame_window = st.empty()
 
 # -------------------------------
 # Camera Setup
@@ -17,10 +22,8 @@ cap.set(4,720)
 # MediaPipe Setup
 # -------------------------------
 mp_hands = mp.solutions.hands
-hands_detector = mp_hands.Hands(
-    min_detection_confidence=0.75,
-    min_tracking_confidence=0.75
-)
+hands_detector = mp_hands.Hands(min_detection_confidence=0.75,
+                                min_tracking_confidence=0.75)
 
 mp_draw = mp.solutions.drawing_utils
 
@@ -141,11 +144,9 @@ def neon(canvas_img,x1,y1,x2,y2,color,size):
     cv2.line(canvas_img,(x1,y1),(x2,y2),(255,255,255),core_size,cv2.LINE_AA)
 
 # -------------------------------
-# Streamlit Frame
+# Main Loop
 # -------------------------------
-FRAME_WINDOW = st.image([])
-
-while True:
+while run:
 
     success,img = cap.read()
     if not success:
@@ -165,7 +166,9 @@ while True:
         hand_landmarks = result.multi_hand_landmarks[0]
 
         mp_draw.draw_landmarks(
-            img,hand_landmarks,mp_hands.HAND_CONNECTIONS
+            img,hand_landmarks,mp_hands.HAND_CONNECTIONS,
+            mp_draw.DrawingSpec(color=(255,255,255),thickness=1,circle_radius=2),
+            mp_draw.DrawingSpec(color=(255,255,255),thickness=1)
         )
 
         h,w,_ = img.shape
@@ -273,6 +276,4 @@ while True:
     img=cv2.bitwise_and(img,imgInv)
     img=cv2.bitwise_or(img,canvas)
 
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    FRAME_WINDOW.image(img)
+    frame_window.image(cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
